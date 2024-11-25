@@ -3,12 +3,13 @@ import {
   View,
   Text,
   TextInput,
-  Button,
+  TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from "react-native";
 import { auth, db } from "../firebase"; // Firebase-konfiguration
 import { doc, setDoc } from "firebase/firestore";
@@ -26,35 +27,19 @@ const AuthScreen = ({ navigation }) => {
   const handleAuth = async () => {
     try {
       if (isSignUp) {
-        // Registrer ny bruger
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        console.log("User registered:", user);
-
-        // Forsøg at gemme brugeroplysninger i Firestore
-        try {
-          await setDoc(doc(db, "users", user.uid), {
-            name,
-            age,
-            city,
-            email: user.email,
-          });
-          console.log("User data saved to Firestore");
-        } catch (firestoreError) {
-          console.error("Firestore Error:", firestoreError.message);
-        }
+        await setDoc(doc(db, "users", user.uid), {
+          name,
+          age,
+          city,
+          email: user.email,
+        });
       } else {
-        // Log eksisterende bruger ind
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        console.log("User logged in:", user);
+        await signInWithEmailAndPassword(auth, email, password);
       }
-
-      setError(""); // Ryd fejlmeddelelser
-      console.log("Navigating to Main");
-      navigation.navigate("Main"); // Naviger til MainTabs
+      setError("");
     } catch (authError) {
       console.error("Auth Error:", authError.message);
       setError(authError.message);
@@ -66,62 +51,71 @@ const AuthScreen = ({ navigation }) => {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={80}
+        keyboardVerticalOffset={60} // Justér om nødvendigt
       >
-        <Text style={styles.title}>RecipeBook</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>{isSignUp ? "Sign Up" : "Sign In"}</Text>
+          <Text style={styles.subtitle}>
+            {isSignUp ? "Create a new account" : "Welcome back, please sign in"}
+          </Text>
 
-        {/* Registreringsfelter vises kun for nye brugere */}
-        {isSignUp && (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Age"
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="City"
-              value={city}
-              onChangeText={setCity}
-            />
-          </>
-        )}
+          {isSignUp && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Age"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                value={city}
+                onChangeText={setCity}
+              />
+            </>
+          )}
 
-        {/* Fælles felter for login og registrering */}
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        {/* Fejlmeddelelse */}
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        {/* Login/Registreringsknap */}
-        <Button title={isSignUp ? "Sign Up" : "Login"} onPress={handleAuth} />
+          <TouchableOpacity style={styles.button} onPress={handleAuth}>
+            <Text style={styles.buttonText}>{isSignUp ? "Sign Up" : "Sign In"}</Text>
+          </TouchableOpacity>
 
-        {/* Skift mellem login og registrering */}
-        <Text style={styles.switchText} onPress={() => setIsSignUp(!isSignUp)}>
-          {isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}
-        </Text>
+          <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+            <Text style={styles.switchText}>
+              {isSignUp
+                ? "Already have an account? Sign In"
+                : "Don't have an account? Sign Up"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
@@ -130,31 +124,57 @@ const AuthScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f2f2f2",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
     marginBottom: 20,
   },
   input: {
-    width: "80%",
+    width: "100%",
+    padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
-    borderRadius: 5,
+    borderRadius: 8,
+    marginBottom: 15,
+    backgroundColor: "#fff",
+  },
+  button: {
+    width: "100%",
+    backgroundColor: "#6200EE",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
     marginBottom: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  switchText: {
+    color: "#6200EE",
+    fontSize: 14,
+    marginTop: 15,
+    textDecorationLine: "underline",
   },
   error: {
     color: "red",
     marginBottom: 10,
-  },
-  switchText: {
-    marginTop: 20,
-    color: "blue",
-    textDecorationLine: "underline",
+    textAlign: "center",
   },
 });
 
