@@ -59,11 +59,16 @@ const HomeScreen = ({ navigation }) => {
 
   const renderRecipe = ({ item }) => {
     const imageSource = item.imageURL ? { uri: item.imageURL } : fallbackImage;
-
+  
     return (
       <TouchableOpacity
         style={styles.recipeCard}
-        onPress={() => navigation.navigate("Recipe View", { recipe: item })}
+        onPress={() =>
+          navigation.navigate("Recipes", {
+            screen: "Recipe View", // Gå til Recipe View i RecipesStack
+            params: { recipe: item }, // Send opskriftsdata
+          })
+        }
       >
         <Image source={imageSource} style={styles.recipeImage} />
         <View style={styles.textContainer}>
@@ -75,6 +80,7 @@ const HomeScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   };
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { db, storage } from "../firebase"; // Firebase config
+import { db, storage } from "../firebase";
 import { doc, getDoc, collection, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth } from "../firebase";
@@ -86,31 +86,31 @@ const CreateRecipeScreen = ({ navigation }) => {
       alert("Please fill out all required fields!");
       return;
     }
-  
+
     let imageURL = null;
     if (image) {
       setUploading(true);
       imageURL = await uploadImage(image);
       setUploading(false);
     }
-  
+
     try {
       // Hent brugerens navn fra 'users'-samlingen
       const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
       const userName = userDoc.exists() ? userDoc.data().name : "Anonymous";
-  
-      // Tilføj opskrift med brugerens UID og navn
+
+      // Tilføj opskrift med brugerens email og navn
       await addDoc(collection(db, "recipes"), {
         title,
         description,
         ingredients,
         steps,
         imageURL: imageURL || null,
-        createdBy: auth.currentUser.uid, // Gem brugerens UID
+        createdBy: auth.currentUser.email, // Gem brugerens email
         createdByName: userName, // Gem brugerens navn
         createdAt: new Date(),
       });
-  
+
       alert("Recipe saved successfully!");
       navigation.goBack();
     } catch (error) {
@@ -118,8 +118,6 @@ const CreateRecipeScreen = ({ navigation }) => {
       alert("Failed to save recipe.");
     }
   };
-  
-  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -129,7 +127,7 @@ const CreateRecipeScreen = ({ navigation }) => {
         keyboardVerticalOffset={80}
       >
         <ScrollView
-          showsVerticalScrollIndicator={false} // Fjerner scroll-indikator
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
           <Text style={styles.title}>Create a New Recipe</Text>
@@ -147,7 +145,6 @@ const CreateRecipeScreen = ({ navigation }) => {
             multiline={true}
             numberOfLines={2}
           />
-
           <TouchableOpacity style={styles.button} onPress={pickImage}>
             <Text style={styles.buttonText}>Pick Image</Text>
           </TouchableOpacity>
@@ -164,14 +161,12 @@ const CreateRecipeScreen = ({ navigation }) => {
               <Text style={styles.buttonText}>Add</Text>
             </TouchableOpacity>
           </View>
-
           {ingredients.map((ingredient, index) => (
-          <View key={index} style={styles.bulletItem}>
-            <Text style={styles.bulletPoint}>•</Text>
-            <Text style={styles.listItem}>{ingredient}</Text>
-          </View>
+            <View key={index} style={styles.bulletItem}>
+              <Text style={styles.bulletPoint}>•</Text>
+              <Text style={styles.listItem}>{ingredient}</Text>
+            </View>
           ))}
-
           <Text style={styles.subTitle}>Steps</Text>
           <View style={styles.inline}>
             <TextInput
@@ -220,7 +215,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: "top", 
+    textAlignVertical: "top",
   },
   bulletItem: {
     flexDirection: "row",
@@ -230,11 +225,11 @@ const styles = StyleSheet.create({
   bulletPoint: {
     fontSize: 18,
     marginRight: 8,
-    color: "#6200ee", // Farve til bullet, kan ændres
+    color: "#6200ee",
   },
   listItem: {
     fontSize: 16,
-    color: "#333", // Tekstfarve
+    color: "#333",
   },
   input: {
     borderWidth: 1,
@@ -267,10 +262,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 5,
     marginRight: 8,
-  },
-  listItem: {
-    fontSize: 16,
-    marginVertical: 4,
   },
   button: {
     backgroundColor: "#6200ee",

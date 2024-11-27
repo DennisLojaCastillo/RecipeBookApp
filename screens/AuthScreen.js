@@ -10,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
+  Image,
 } from "react-native";
 import { auth, db } from "../firebase"; // Firebase-konfiguration
 import { doc, setDoc } from "firebase/firestore";
@@ -57,6 +58,7 @@ const AuthScreen = ({ navigation }) => {
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
         >
+          <Image source={require("../assets/RecipeBook.png")} style={styles.logo} />
           <Text style={styles.title}>{isSignUp ? "Sign Up" : "Sign In"}</Text>
           <Text style={styles.subtitle}>
             {isSignUp ? "Create a new account" : "Welcome back, please sign in"}
@@ -131,6 +133,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,

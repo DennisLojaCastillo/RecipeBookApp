@@ -1,22 +1,66 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const fallbackImage = require("../assets/fallback.png");
 
 const RecipeViewScreen = ({ route }) => {
   const { recipe } = route.params;
+  const [recipeData, setRecipeData] = useState(recipe);
+  const [loading, setLoading] = useState(false);
 
-  const imageSource = recipe.imageURL ? { uri: recipe.imageURL } : fallbackImage;
+  const fetchRecipe = async () => {
+    try {
+      setLoading(true);
+      const recipeDoc = await getDoc(doc(db, "recipes", recipe.id));
+      if (recipeDoc.exists()) {
+        setRecipeData({ id: recipe.id, ...recipeDoc.data() });
+      } else {
+        console.error("Recipe not found.");
+      }
+    } catch (error) {
+      console.error("Error fetching recipe:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRecipe();
+    }, [])
+  );
+
+  const imageSource = recipeData.imageURL
+    ? { uri: recipeData.imageURL }
+    : fallbackImage;
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6200ee" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image source={imageSource} style={styles.recipeImage} />
-      <Text style={styles.title}>{recipe.title}</Text>
-      <Text style={styles.description}>{recipe.description}</Text>
+      <Text style={styles.title}>{recipeData.title}</Text>
+      <Text style={styles.description}>{recipeData.description}</Text>
 
       <Text style={styles.sectionTitle}>Ingredients</Text>
-      {recipe.ingredients && recipe.ingredients.length > 0 ? (
-        recipe.ingredients.map((ingredient, index) => (
+      {recipeData.ingredients && recipeData.ingredients.length > 0 ? (
+        recipeData.ingredients.map((ingredient, index) => (
           <Text key={index} style={styles.listItem}>
             • {ingredient}
           </Text>
@@ -26,8 +70,8 @@ const RecipeViewScreen = ({ route }) => {
       )}
 
       <Text style={styles.sectionTitle}>Steps</Text>
-      {recipe.steps && recipe.steps.length > 0 ? (
-        recipe.steps.map((step, index) => (
+      {recipeData.steps && recipeData.steps.length > 0 ? (
+        recipeData.steps.map((step, index) => (
           <Text key={index} style={styles.listItem}>
             {index + 1}. {step}
           </Text>
@@ -70,13 +114,19 @@ const styles = StyleSheet.create({
   },
   listItem: {
     fontSize: 16,
-    marginVertical: 4,
+    marginVertical: 7,
+    paddingLeft: 8,
   },
   emptyText: {
     fontSize: 16,
     color: "#aaa",
     textAlign: "center",
     marginTop: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

@@ -24,7 +24,12 @@ const Stack = createStackNavigator();
 
 // Opsætning af RecipesStack
 const RecipesStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+  screenOptions={({ route }) => {
+    console.log("Current screen:", route.name); // Debug log
+    return {}; // Her kan du tilføje andre screenOptions, hvis nødvendigt
+  }}
+  >
     <Stack.Screen name="Your Recipes" component={RecipesScreen} />
     <Stack.Screen name="Recipe View" component={RecipeViewScreen} />
     <Stack.Screen name="Recipe Details" component={RecipeDetailScreen} />
